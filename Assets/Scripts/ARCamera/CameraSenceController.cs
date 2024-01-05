@@ -5,12 +5,16 @@ using UnityEngine;
 using TMPro;
 using Newtonsoft.Json.Linq;
 using System;
+using UnityEngine.UI;
 
 public class CameraSenceController : MonoBehaviour
 {
-   
+    [SerializeField] private GameObject panelGroup;
+
     [SerializeField] private GoogleMapAPIControl googleMapAPIControl;
     [SerializeField] private CameraSenceUIButtonController buttonController;
+    [SerializeField] private UbikeAPI ubikeAPI;
+
     [SerializeField] private TextMeshProUGUI UbikeText;
     [SerializeField] private TextMeshProUGUI debugMessage;
     [SerializeField] private GameObject locationMarkIcon;
@@ -54,6 +58,8 @@ public class CameraSenceController : MonoBehaviour
                     buttonController.setLocationMark(hit.transform.gameObject);
                     // 取得距離
                     StartCoroutine(googleMapAPIControl.GetLocationDistance(dis.x, dis.y));
+                    // 取得站點資料
+                    ubikeAPI.GetUbikeStationInformation(dis.x, dis.y);
                     // 取得路線
                     StartCoroutine(googleMapAPIControl.GetRequestDirectionsData(dis.x, dis.y));
                     Debug.Log(hit);
@@ -118,17 +124,39 @@ public class CameraSenceController : MonoBehaviour
         UbikeText.text += "\n" + data["rows"][0]["elements"][0]["distance"]["text"] + "\n";
     }
 
-    // API 傳導行資料進來
+    // API 傳導航進來
     public void GetDirection(string text)
     {
         JObject data = JObject.Parse(text);
         //Debug.Log("時間: " + data["routes"][0]["legs"][0]["duration"]);
         string directionWay = "";
-        foreach(var step in data["routes"][0]["legs"][0]["steps"])
+        foreach (var step in data["routes"][0]["legs"][0]["steps"])
         {
             directionWay += step["html_instructions"] + "\n";
         }
-        UbikeText.text += directionWay;
+        UbikeText.text += KeepChinese(directionWay);
         Debug.Log(directionWay);
     }
+    // API 傳站點資訊
+    public void GetInformation(string text)
+    {
+        UbikeText.text += text;
+    }
+
+    private string KeepChinese(string str)
+    {
+        string chineseString = "";
+
+        for (int i = 0; i < str.Length; i++)
+        {
+            if ((str[i] >= 0x4E00 && str[i] <= 0x9FA5) || str[i] == '\n') //中文
+            {
+                chineseString += str[i];
+            }
+        }
+
+        return chineseString;
+    }
+
+
 }

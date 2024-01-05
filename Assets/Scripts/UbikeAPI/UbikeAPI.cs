@@ -12,60 +12,50 @@ using Newtonsoft.Json.Linq;
 public class UbikeAPI : MonoBehaviour
 {
     private AccessToken token;
+    private JArray stationDataArray;
+    private JArray stationBikeInfo;
+    // private JArray Database;
     [SerializeField] private GPSLocation gps; // 經緯度資料
+    [SerializeField] private CameraSenceController senceController;
+
+    private string nearestStationUID; // 最近站點的UID
+    private string stationName; // 最近站點的中文名
 
     private float lat;
     private float lon;
+    private float currentLat;
+    private float currentLon;
+    [SerializeField] private string clientId = "YOUR_CLIENT_ID";
+    [SerializeField] private string clientSecret = "YOUR_CLIENT_SECRET";
 
     private void Start()
     {
         Debug.Log("run api");
         // 步驟1：取得 Access Token
-        string clientId = "YOUR_CLIENT_ID";
-        string clientSecret = "YOUR_CLIENT_SECRET";
 
         // 步驟2：呼叫 TDX API 服務，取得數據資料
+        //StartCoroutine(GetAccessToken(clientId, clientSecret));
+        
+
+    }
+
+    public void GetUbikeStationInformation(float la, float ln)
+    {
+        currentLat = la;
+        currentLon = ln;
         StartCoroutine(GetAccessToken(clientId, clientSecret));
     }
+
 
     // Update is called once per frame
     void Update()
     {
         //Debug.Log("UbikeAPI!!");
-        // gps.GetLatAndLon() 取得經緯度。return type: Vector2 x是lat, y是lon
-        lat = gps.GetLatAndLon().x;
-        lon = gps.GetLatAndLon().y;
-    }
+        //gps.GetLatAndLon(); // 取得經緯度。return type: Vector2 x是lat, y是lon
+        //lat = gps.GetLatAndLon().x;
+        //lon = gps.GetLatAndLon().y;
 
-    IEnumerator GetUbikeAPI(string uri)
-    {
-        if (token == null || string.IsNullOrEmpty(token.access_token))
-        {
-            Debug.LogError("Access Token is not available.");
-            yield break;
-        }
-        using (UnityWebRequest webRequest = UnityWebRequest.Get(uri))
-        {
-            webRequest.SetRequestHeader("Authorization", $"Bearer {token.access_token}");
-            webRequest.SetRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-            // Request and wait for the desired page.
-            yield return webRequest.SendWebRequest();
-
-            if (webRequest.result == UnityWebRequest.Result.Success)
-            {
-                // 讀取回應內容
-                string response = webRequest.downloadHandler.text;
-                Debug.Log("ubike api data load success\n" + response);
-
-                // 解析 JSON 資料
-                ParseBikeStationData(response);
-            }
-            else
-            {
-                Debug.LogError($"Error fetching bike station data: {webRequest.result} - {webRequest.error}");
-                Debug.LogError($"Error response: {webRequest.downloadHandler.text}");
-            }
-        }
+        //StartCoroutine(GetUbikeAPI("https://tdx.transportdata.tw/api/basic/v2/Bike/Availability/City/Chiayi?$format=JSON", 1));
     }
 
     private IEnumerator GetAccessToken(string clientId, string clientSecret)
@@ -99,7 +89,8 @@ public class UbikeAPI : MonoBehaviour
                 token = JsonUtility.FromJson<AccessToken>(responseStr);
 
                 // 步驟2：呼叫 TDX API 服務，取得數據資料
-                StartCoroutine(GetUbikeAPI("https://tdx.transportdata.tw/api/basic/v2/Bike/Station/City/Chiayi?$format=JSON"));
+                StartCoroutine(GetUbikeAPI("https://tdx.transportdata.tw/api/basic/v2/Bike/Station/City/Chiayi?$format=JSON", 0));
+                StartCoroutine(GetUbikeAPI("https://tdx.transportdata.tw/api/basic/v2/Bike/Availability/City/Chiayi?$format=JSON", 1));
             }
             else
             {
@@ -118,86 +109,127 @@ public class UbikeAPI : MonoBehaviour
         public string scope;
     }
 
-    private void ParseBikeStationData(string jsonData)
+    IEnumerator GetUbikeAPI(string uri, int curInfo)
     {
-        // 在這裡進行 JSON 資料的解析
-        // 你可以使用 JsonUtility 或其他 JSON 解析工具，取決於資料的複雜程度
+        if (token == null || string.IsNullOrEmpty(token.access_token))
+        {
+            Debug.LogError("Access Token is not available.");
+            yield break;
+        }
+        using (UnityWebRequest webRequest = UnityWebRequest.Get(uri))
+        {
+            webRequest.SetRequestHeader("Authorization", $"Bearer {token.access_token}");
+            webRequest.SetRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            // Request and wait for the desired page.
+            yield return webRequest.SendWebRequest();
 
-        // 這是一個簡單的例子，如果 JSON 資料的根層是一個物件，可以使用 JsonUtility
-        // BikeStationData stationData = JsonUtility.FromJson<BikeStationData>(jsonData);
+            if (webRequest.result == UnityWebRequest.Result.Success)
+            {
+                // 讀取回應內容
+                string response = webRequest.downloadHandler.text;
+                Debug.Log("ubike api data load success\n" + response);
 
-        // 現在，你可以使用 stationData 物件中的屬性進行操作
-        // Debug.Log($"Station Name: {stationData.nameZh}");
-        // Debug.Log($"Available Rent Bikes: {stationData.availableRentBikes}");
-
-        // string jsonData = "你的JSON字串"; // 將你的 JSON 字串指定到這裡
-
-        // 使用 JsonUtility.FromJson 將 JSON 字串轉換為 BikeStationList 物件
-        //BikeStationList[] stationArray = JsonUtility.FromJson<BikeStationData[]>(jsonData);
-
-        // BikeStationData[] stationDataArray = JsonUtility.FromJson<BikeStationData[]>(jsonData);
-        //List<BikeStationData> stationDataArray = JsonUtility.FromJson<List<BikeStationData>>(jsonData);
-        JArray stationDataArray = JArray.Parse(jsonData);
-        Debug.Log(stationDataArray);
-        //if (stationDataArray != null)
-        //{
-        //    // 現在，你可以使用 stationDataArray 中的第一個元素（或根據實際情況選擇元素）進行操作
-        //    BikeStationData stationData = stationDataArray[0];
-        //    Debug.Log($"Station UID: {stationData.StationUID}");
-        //    Debug.Log($"name: {stationData.StationName.Zh_tw}");
-        //}
-        //else
-        //{
-        //    Debug.LogError("No bike station data found.");
-        //}
-
-        // 現在，你可以訪問每個站點
-        //foreach (BikeStationData stationData in stationDataArray.stations)
-        //{
-        //Debug.Log($"Station Name (Chinese): {stationData.StationName.Zh_tw}");
-        //Debug.Log($"Station Name (English): {stationData.StationName.En}");
-        //Debug.Log($"Position Lon: {stationData.StationPosition.PositionLon}");
-        //Debug.Log($"Position Lat: {stationData.StationPosition.PositionLat}");
-        // 以此類推，你可以訪問其他屬性
-        //}
+                // 解析 JSON 資料
+                if (curInfo == 0)
+                {
+                    ParseBikeStationData(response);
+                }
+                else if (curInfo == 1)
+                {
+                    GetCurInfo(response);      // update current info
+                }
+            }
+            else
+            {
+                Debug.LogError($"Error fetching bike station data: {webRequest.result} - {webRequest.error}");
+                Debug.LogError($"Error response: {webRequest.downloadHandler.text}");
+            }
+        }
     }
 
-    // 定義 BikeStationData 類別以匹配 JSON 資料的結構
-   // public class BikeStationList
-   // {
-   //     public List<BikeStationData> stations;
-   // }
+    private void ParseBikeStationData(string jsonData)
+    {
+        stationDataArray = JArray.Parse(jsonData);
+        Debug.Log(stationDataArray);
 
-   // public class BikeStationData
-   //{
-   //      public string StationUID;
-   //     public string StationID;
-   //     public string AuthorityID;
-   //     public StationNameData StationName;
-   //     public StationPositionData StationPosition;
-   //     public StationAddressData StationAddress;
-   //     public int BikesCapacity;
-   //     public int ServiceType;
-   //     public string SrcUpdateTime;
-   //     public string UpdateTime;
-   // }
+        float stationLat, stationLon;
+        foreach (var item in stationDataArray)
+        {
+            stationLat = float.Parse(item["StationPosition"]["PositionLat"].ToString());
+            stationLon = float.Parse(item["StationPosition"]["PositionLon"].ToString());
 
-   // public class StationNameData
-   // {
-   //     public string Zh_tw;
-   //     public string En;
-   // }
+            //Debug.Log("Lat :" + stationLat);
+            //Debug.Log("Lon :" + stationLon);
+        }
+        CaculatenearestUID();
+    }
 
-   // public class StationPositionData
-   // {
-   //     public float PositionLon;
-   //     public float PositionLat;
-   //     public string GeoHash;
-   // }
 
-   // public class StationAddressData
-   // {
-   //     public string Zh_tw;
-   //     public string En;
-   // }
+    private void GetCurInfo(string jsonData)
+    {
+        stationBikeInfo = JArray.Parse(jsonData);
+        Debug.Log(stationBikeInfo);
+
+        float AvailableRentBikes, AvailableReturnBikes;
+        foreach (var item in stationBikeInfo)
+        {
+            AvailableRentBikes = float.Parse(item["AvailableRentBikes"].ToString());
+            AvailableReturnBikes = float.Parse(item["AvailableReturnBikes"].ToString());
+
+            //Debug.Log("Rent :" + AvailableRentBikes);
+            //Debug.Log("Return :" + AvailableReturnBikes);
+        }
+        
+    }
+
+    private void CaculatenearestUID()
+    {
+        // 迭代 YouBike 站點，計算站點
+        float sum = float.MaxValue;
+        float compare;
+
+        foreach (var item in stationDataArray)
+        {
+            float stationLat = float.Parse(item["StationPosition"]["PositionLat"].ToString());
+            float stationLon = float.Parse(item["StationPosition"]["PositionLon"].ToString());
+
+            // 計算距離
+            compare = Mathf.Abs(stationLat - currentLat) + Mathf.Abs(stationLon - currentLon);
+
+            // 更新最短距離的站點
+            if (compare < sum)
+            {
+                sum = compare;
+                nearestStationUID = item["StationUID"].ToString();
+                stationName = item["StationName"]["Zh_tw"].ToString();
+            }
+        }
+        Debug.Log("nearestStationUID :" + nearestStationUID);
+        DataProcess();
+    }
+    private void DataProcess()
+    {
+        float rentBikes = 0.0f, returnBikes = 0.0f;
+        if(stationBikeInfo == null)
+        {
+            GetUbikeStationInformation(currentLat, currentLon);
+            return;
+        }
+
+        foreach (var item in stationBikeInfo)
+        {
+            string stationUID = item["StationUID"].ToString();
+            if (nearestStationUID == stationUID)
+            {
+                rentBikes = float.Parse(item["AvailableRentBikes"].ToString());
+                returnBikes = float.Parse(item["AvailableReturnBikes"].ToString());
+            }
+        }
+        Debug.Log("StationName :" + stationName);
+        Debug.Log("AvailableRentBikes :" + rentBikes);
+        Debug.Log("AvailableReturnBikes :" + returnBikes);
+
+        string ubikeText = "站點名稱 :" + stationName + "\n剩下腳踏車數量 :" + rentBikes + "\n剩下空位 :" + returnBikes + "\n";
+        senceController.GetInformation(ubikeText);
+    }
 }

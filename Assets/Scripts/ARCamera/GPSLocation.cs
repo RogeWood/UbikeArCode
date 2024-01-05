@@ -52,7 +52,7 @@ public class GPSLocation : MonoBehaviour
         else
         {
             // Access granted
-            if(GPSStatus != null) GPSStatus.text = "Running";
+            if(GPSStatus != null) GPSStatus.text = "GPS status: Running";
             InvokeRepeating("UpdateGPSData", 0.5f, 1f);
         }
     }// end of GPSLoc
@@ -64,17 +64,17 @@ public class GPSLocation : MonoBehaviour
             if(Input.location.status == LocationServiceStatus.Running)
             {
                 // Access granted to GPS values and it has been init
-                GPSStatus.text = "Running";
-                latitudeValue.text = "latitude" + Input.location.lastData.latitude.ToString();
-                longitudeValue.text = "longitude" + Input.location.lastData.longitude.ToString();
-                altitudeValue.text = "altitude" + Input.location.lastData.altitude.ToString();
-                horizontaAccuracylValue.text = "horizontalAccuracy" + Input.location.lastData.horizontalAccuracy.ToString();
-                timestampValue.text = "timestamp" + Input.location.lastData.timestamp.ToString();
+                GPSStatus.text = "GPS status: Running";
+                latitudeValue.text = "Latitude: " + Input.location.lastData.latitude.ToString();
+                longitudeValue.text = "Longitude: " + Input.location.lastData.longitude.ToString();
+                altitudeValue.text = "Altitude: " + Input.location.lastData.altitude.ToString();
+                horizontaAccuracylValue.text = "Horizontal Accuracy: " + Input.location.lastData.horizontalAccuracy.ToString();
+                timestampValue.text = "Timestamp: " + Input.location.lastData.timestamp.ToString();
             }
             else
             {
                 // service is stoped
-                GPSStatus.text = "Stop";
+                GPSStatus.text = "GPS status: Stop";
             }
         }
     }// end of UpdateGPSData

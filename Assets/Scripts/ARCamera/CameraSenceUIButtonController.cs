@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+
 public class CameraSenceUIButtonController : MonoBehaviour
 {
     [SerializeField] private GameObject informationPanel;
@@ -19,15 +20,17 @@ public class CameraSenceUIButtonController : MonoBehaviour
 
     private void Start()
     {
+        panelGroup.SetActive(false);
         openPostition = panelGroup.transform.position;
         // inactive/active plane
-        googleMapPanel.SetActive(false);
-        ubikeStationPanel.SetActive(false);
-        informationPanel.SetActive(true);
+        // googleMapPanel.SetActive(false);
+        // ubikeStationPanel.SetActive(false);
+        // informationPanel.SetActive(true);
     }
 
     public void OnClickGoogleMapButton()
     {
+        panelGroup.SetActive(true);
         informationPanel.SetActive(false);
         googleMapPanel.SetActive(true);
         ubikeStationPanel.SetActive(false);
@@ -35,6 +38,7 @@ public class CameraSenceUIButtonController : MonoBehaviour
 
     public void OnClickInformationButton()
     {
+        panelGroup.SetActive(true);
         informationPanel.SetActive(true);
         googleMapPanel.SetActive(false);
         ubikeStationPanel.SetActive(false);
@@ -42,6 +46,7 @@ public class CameraSenceUIButtonController : MonoBehaviour
 
     public void OnClickSearchUbikeStation()
     {
+        panelGroup.SetActive(true);
         informationPanel.SetActive(false);
         googleMapPanel.SetActive(false);
         ubikeStationPanel.SetActive(true);
@@ -63,17 +68,19 @@ public class CameraSenceUIButtonController : MonoBehaviour
 
     public void onClikeControlPanel()
     {
-        Debug.Log(openPostition);
-        if (isOpen)
-        {
-            panelGroup.transform.position = openPostition - new Vector3(0, 200, 0);
-            isOpen = false;
-        }
-        else
-        {
-            panelGroup.transform.position = openPostition;
-            isOpen = true;
-        }
+        panelGroup.SetActive(false);
+        return;
+        // Debug.Log(openPostition);
+        // if (isOpen)
+        // {
+        //     panelGroup.transform.position = new Vector3(openPostition.x, openPostition.y-200, openPostition.z);
+        //     isOpen = false;
+        // }
+        // else
+        // {
+        //     panelGroup.transform.position = openPostition;
+        //     isOpen = true;
+        // }
     }
 
     public void onClikeDeleteLocaitonMark()

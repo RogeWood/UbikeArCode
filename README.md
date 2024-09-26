@@ -1,8 +1,6 @@
 # UbikeAR
 AR 虛擬實境 Ubike 站點導航
 
-作業繳交
-
 code 位置: `UbikeArCode\Assets\Scripts`
 
 ## 開啟檔案
